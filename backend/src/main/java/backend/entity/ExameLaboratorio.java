@@ -27,6 +27,7 @@ public class ExameLaboratorio {
 
     @ManyToOne
     @JoinColumn(name = "atendimento_id", nullable = false)
+    @com.fasterxml.jackson.annotation.JsonBackReference
     @ToString.Exclude
     private Atendimento atendimento;
 }
