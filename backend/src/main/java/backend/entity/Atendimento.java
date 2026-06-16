@@ -5,6 +5,8 @@ import lombok.*;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 @Entity
 @Table(name = "atendimentos")
 @Data
@@ -30,7 +32,7 @@ public class Atendimento {
     private ProfissionalSaude profissionalSaude;
 
     @OneToMany(mappedBy = "atendimento", cascade = CascadeType.ALL, orphanRemoval = true)
-    @com.fasterxml.jackson.annotation.JsonManagedReference
     @ToString.Exclude
+    @JsonIgnore
     private List<ExameLaboratorio> examesLaboratorio;
 }
