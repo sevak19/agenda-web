@@ -1,9 +1,5 @@
 package backend.e2e;
 
-import backend.entity.Categoria;
-import backend.entity.ProfissionalSaude;
-import backend.entity.Atendimento;
-import backend.entity.ExameLaboratorio;
 import backend.repository.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -17,8 +13,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.util.Map;
 
 import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -57,15 +52,18 @@ class FluxoCompletoE2ETest {
     void fluxoCompleto() throws Exception {
 
         // ─── PASSO 1: Criar profissional ──────────────────────────────
-        ProfissionalSaude profissional = new ProfissionalSaude();
-        profissional.setNome("Dr. Ricardo Alves");
-        profissional.setTelefone("11977777777");
-        profissional.setEndereco("Av. Paulista, 1000");
-        profissional.setCategoria(Categoria.MEDICO);
+        String profissionalJson = """
+                {
+                    "nome": "Dr. Ricardo Alves",
+                    "telefone": "11977777777",
+                    "endereco": "Av. Paulista, 1000",
+                    "categoria": "MEDICO"
+                }
+                """;
 
         MvcResult resultProfissional = mockMvc.perform(post("/profissionais")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(profissional)))
+                .content(profissionalJson))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id", notNullValue()))
                 .andExpect(jsonPath("$.nome", is("Dr. Ricardo Alves")))
@@ -75,19 +73,19 @@ class FluxoCompletoE2ETest {
                 .readTree(resultProfissional.getResponse().getContentAsString())
                 .get("id").asLong();
 
-        // ─── PASSO 2: Criar atendimento vinculado ao profissional ─────
-        ProfissionalSaude ref = new ProfissionalSaude();
-        ref.setId(profissionalId);
-
-        Atendimento atendimento = new Atendimento();
-        atendimento.setProfissionalSaude(ref);
-        atendimento.setDataHora(LocalDateTime.now());
-        atendimento.setDescricao("Consulta cardiológica");
-        atendimento.setObservacoes("Paciente com histórico de hipertensão");
+        // ─── PASSO 2: Criar atendimento ───────────────────────────────
+        String atendimentoJson = """
+                {
+                    "descricao": "Consulta cardiológica",
+                    "observacoes": "Paciente com histórico de hipertensão",
+                    "dataHora": "2026-06-15T10:00:00",
+                    "profissionalSaude": { "id": %d }
+                }
+                """.formatted(profissionalId);
 
         MvcResult resultAtendimento = mockMvc.perform(post("/atendimentos")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(atendimento)))
+                .content(atendimentoJson))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id", notNullValue()))
                 .andExpect(jsonPath("$.descricao", is("Consulta cardiológica")))
@@ -97,20 +95,20 @@ class FluxoCompletoE2ETest {
                 .readTree(resultAtendimento.getResponse().getContentAsString())
                 .get("id").asLong();
 
-        // ─── PASSO 3: Criar exame vinculado ao atendimento ────────────
-        Atendimento refAtendimento = new Atendimento();
-        refAtendimento.setId(atendimentoId);
-
-        ExameLaboratorio exame = new ExameLaboratorio();
-        exame.setAtendimento(refAtendimento);
-        exame.setNome("Eletrocardiograma");
-        exame.setResultado("Ritmo sinusal normal");
-        exame.setDataRealizacao(LocalDate.now());
-        exame.setLaboratorio("Cardio Lab");
+        // ─── PASSO 3: Criar exame ─────────────────────────────────────
+        String exameJson = """
+                {
+                    "nome": "Eletrocardiograma",
+                    "resultado": "Ritmo sinusal normal",
+                    "dataRealizacao": "2026-06-15",
+                    "laboratorio": "Cardio Lab",
+                    "atendimento": { "id": %d }
+                }
+                """.formatted(atendimentoId);
 
         mockMvc.perform(post("/exames")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(exame)))
+                .content(exameJson))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id", notNullValue()))
                 .andExpect(jsonPath("$.nome", is("Eletrocardiograma")));
@@ -133,6 +131,6 @@ class FluxoCompletoE2ETest {
 
         mockMvc.perform(get("/exames/atendimento/{id}", atendimentoId))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(0))); // cascade deletou os exames
+                .andExpect(jsonPath("$", hasSize(0)));
     }
 }
