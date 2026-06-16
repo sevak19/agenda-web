@@ -36,10 +36,18 @@ public class AtendimentoController {
 
     @PostMapping
     public ResponseEntity<Atendimento> criar(@RequestBody Atendimento atendimento) {
+        if (atendimento.getProfissionalSaude() == null || atendimento.getProfissionalSaude().getId() == null) {
+            return ResponseEntity.badRequest().build();
+        }
         Long profissionalId = atendimento.getProfissionalSaude().getId();
 
         return profissionalRepository.findById(profissionalId).map(profissional -> {
             atendimento.setProfissionalSaude(profissional);
+
+            if (atendimento.getExamesLaboratorio() != null) {
+                atendimento.getExamesLaboratorio().forEach(exame -> exame.setAtendimento(atendimento));
+            }
+
             return ResponseEntity.ok(repository.save(atendimento));
         }).orElse(ResponseEntity.badRequest().build());
     }
