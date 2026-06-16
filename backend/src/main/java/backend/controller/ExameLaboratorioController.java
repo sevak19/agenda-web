@@ -36,6 +36,9 @@ public class ExameLaboratorioController {
 
     @PostMapping
     public ResponseEntity<ExameLaboratorio> criar(@RequestBody ExameLaboratorio exame) {
+        if (exame.getAtendimento() == null || exame.getAtendimento().getId() == null) {
+            return ResponseEntity.badRequest().build();
+        }
         Long atendimentoId = exame.getAtendimento().getId();
 
         return atendimentoRepository.findById(atendimentoId).map(atendimento -> {
