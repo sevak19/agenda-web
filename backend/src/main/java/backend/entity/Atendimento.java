@@ -30,6 +30,7 @@ public class Atendimento {
     private ProfissionalSaude profissionalSaude;
 
     @OneToMany(mappedBy = "atendimento", cascade = CascadeType.ALL, orphanRemoval = true)
+    @com.fasterxml.jackson.annotation.JsonManagedReference
     @ToString.Exclude
     private List<ExameLaboratorio> examesLaboratorio;
 }
