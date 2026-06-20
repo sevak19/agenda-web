@@ -33,6 +33,6 @@ services:
         fromDatabase:
           name: agenda-web-db
           property: password
-      # Defina com a URL do frontend no Vercel (ex.: https://agenda-web.vercel.app)
+      # Substitua pela URL real do frontend no Vercel (sem barra no final)
       - key: APP_CORS_ALLOWED_ORIGINS
-        sync: false
+        value: https://agenda-web.vercel.app
