@@ -1,0 +1,38 @@
+databases:
+  - name: agenda-web-db
+    databaseName: agenda_web
+    user: agenda
+    plan: free
+
+services:
+  - type: web
+    name: agenda-web-backend
+    runtime: docker
+    plan: free
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    healthCheckPath: /profissionais
+    envVars:
+      - key: DB_HOST
+        fromDatabase:
+          name: agenda-web-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: agenda-web-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: agenda-web-db
+          property: database
+      - key: DB_USER
+        fromDatabase:
+          name: agenda-web-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: agenda-web-db
+          property: password
+      # Defina com a URL do frontend no Vercel (ex.: https://agenda-web.vercel.app)
+      - key: APP_CORS_ALLOWED_ORIGINS
+        sync: false
