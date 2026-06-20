@@ -1,7 +1,7 @@
 package backend.controller;
 
 import backend.entity.ProfissionalSaude;
-import backend.repository.ProfissionalSaudeRepository;
+import backend.service.ProfissionalSaudeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,48 +13,43 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ProfissionalSaudeController {
 
-    private final ProfissionalSaudeRepository repository;
+    private final ProfissionalSaudeService service;
 
     @GetMapping
     public List<ProfissionalSaude> listarTodos() {
-        return repository.findAll();
+        return service.listarTodos();
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<ProfissionalSaude> buscarPorId(@PathVariable Long id) {
-        return repository.findById(id)
+        return service.buscarPorId(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/buscar")
     public List<ProfissionalSaude> buscarPorNome(@RequestParam String nome) {
-        return repository.findByNomeContainingIgnoreCase(nome);
+        return service.buscarPorNome(nome);
     }
 
     @PostMapping
     public ProfissionalSaude criar(@RequestBody ProfissionalSaude profissional) {
-        return repository.save(profissional);
+        return service.criar(profissional);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<ProfissionalSaude> atualizar(@PathVariable Long id,
                                                         @RequestBody ProfissionalSaude dados) {
-        return repository.findById(id).map(profissional -> {
-            profissional.setNome(dados.getNome());
-            profissional.setTelefone(dados.getTelefone());
-            profissional.setEndereco(dados.getEndereco());
-            profissional.setCategoria(dados.getCategoria());
-            return ResponseEntity.ok(repository.save(profissional));
-        }).orElse(ResponseEntity.notFound().build());
+        return service.atualizar(id, dados)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletar(@PathVariable Long id) {
-        if (!repository.existsById(id)) {
+        if (!service.deletar(id)) {
             return ResponseEntity.notFound().build();
         }
-        repository.deleteById(id);
         return ResponseEntity.noContent().build();
     }
 }
